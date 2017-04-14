@@ -1,0 +1,1260 @@
+Docker Notes
+
+Image versus containers:
+Image is an application we want to run
+a container is a running instance of the image running as a process
+you can have many containers running off the same image
+
+
+Image of nginx web server -> images we get from the registry (docker hub) (hub.docker.com)
+
+➜  ~ docker container run --publish 80:80 nginx
+172.17.0.1 - - [13/Apr/2017:09:26:55 +0000] "GET / HTTP/1.1" 304 0 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36" "-"
+172.17.0.1 - - [13/Apr/2017:09:26:58 +0000] "GET / HTTP/1.1" 304 0 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36" "-"
+172.17.0.1 - - [13/Apr/2017:09:27:00 +0000] "GET / HTTP/1.1" 304 0 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36" "-"
+
+In the background:
+1. pulled latest image of nginx from docker hub
+2. started a new container from that image
+
+publish : exposes local port 80 on local machine and sends all traffic from it to the executable running inside the container on port 80.
+
+➜  ~ docker container run --publish 80:80 --detach nginx
+fb1eb5df879582522ea24d426f0f62298be10ac1cdcb0b5732866450950bd423  -> Unique ID
+
+detach tells docker to run it in the background.
+
+
+docker container ls
+( to list all the docker container which are running) -> by default it only shows the running containers.
+➜  ~ docker container ls
+CONTAINER ID        IMAGE               COMMAND                  CREATED              STATUS              PORTS                         NAMES
+fb1eb5df8795        nginx               "nginx -g 'daemon ..."   About a minute ago   Up About a minute   0.0.0.0:80->80/tcp, 443/tcp   gracious_mayer
+
+docker container stop <container-id>
+➜  ~ docker container stop fb1
+fb1
+➜  ~ docker container ls
+CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS               NAMES
+
+
+to list all the container we have ran so far
+
+➜  ~ docker container ls -a
+CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS                          PORTS               NAMES
+fb1eb5df8795        nginx               "nginx -g 'daemon ..."   3 minutes ago       Exited (0) About a minute ago                       gracious_mayer
+9c2f5a51be0c        nginx               "nginx -g 'daemon ..."   5 minutes ago       Exited (0) 3 minutes ago                            fervent_pike
+e84653d02f01        nginx               "nginx -g 'daemon ..."   About an hour ago   Exited (0) About an hour ago                        webserver
+055fc753be5f        hello-world         "/hello"                 About an hour ago   Exited (0) About an hour ago                        fervent_montalcini
+
+docker names are chosen on its own : randomly generated from open source list
+
+➜  ~ docker container run --publish 80:80 --detach --name webhost nginx
+92788c8e369c296e96df2716b6dec4194911c4768d4a3c341ffbf9c66cd04b2e
+➜  ~ docker container ls
+CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS                         NAMES
+92788c8e369c        nginx               "nginx -g 'daemon ..."   4 seconds ago       Up 4 seconds        0.0.0.0:80->80/tcp, 443/tcp   webhost
+
+
+Since if the docker container is running in the background we can not see the logs, to see the logs:
+
+➜  ~ docker container logs webhost
+172.17.0.1 - - [13/Apr/2017:09:36:38 +0000] "GET / HTTP/1.1" 304 0 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36" "-"
+➜  ~ docker container logs webhost
+172.17.0.1 - - [13/Apr/2017:09:36:38 +0000] "GET / HTTP/1.1" 304 0 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36" "-"
+172.17.0.1 - - [13/Apr/2017:09:36:52 +0000] "GET / HTTP/1.1" 304 0 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36" "-"
+172.17.0.1 - - [13/Apr/2017:09:36:53 +0000] "GET / HTTP/1.1" 304 0 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36" "-"
+172.17.0.1 - - [13/Apr/2017:09:36:54 +0000] "GET / HTTP/1.1" 304 0 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36" "-"
+
+To see the processes running inside a container:
+
+➜  ~ docker container top webhost
+PID                 USER                TIME                COMMAND
+2756                root                0:00                nginx: master process nginx -g daemon off;
+2775                104                 0:00                nginx: worker process
+
+To remove the container:
+
+
+➜  ~ docker container ls -a
+CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS                      PORTS                         NAMES
+92788c8e369c        nginx               "nginx -g 'daemon ..."   3 minutes ago       Up 3 minutes                0.0.0.0:80->80/tcp, 443/tcp   webhost
+fb1eb5df8795        nginx               "nginx -g 'daemon ..."   10 minutes ago      Exited (0) 8 minutes ago                                  gracious_mayer
+9c2f5a51be0c        nginx               "nginx -g 'daemon ..."   13 minutes ago      Exited (0) 10 minutes ago                                 fervent_pike
+e84653d02f01        nginx               "nginx -g 'daemon ..."   2 hours ago         Exited (0) 2 hours ago                                    webserver
+055fc753be5f        hello-world         "/hello"                 2 hours ago         Exited (0) 2 hours ago                                    fervent_montalcini
+➜  ~ docker container rm fb1eb5df8795 9c2f5a51be0c e84653d02f01 055fc753be5f
+fb1eb5df8795
+9c2f5a51be0c
+e84653d02f01
+055fc753be5f
+
+
+as a safety measure you can not remove a running container
+
+➜  ~ docker container ls
+CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS                         NAMES
+92788c8e369c        nginx               "nginx -g 'daemon ..."   4 minutes ago       Up 4 minutes        0.0.0.0:80->80/tcp, 443/tcp   webhost
+➜  ~ docker container rm 927
+Error response from daemon: You cannot remove a running container 92788c8e369c296e96df2716b6dec4194911c4768d4a3c341ffbf9c66cd04b2e. Stop the container before attempting removal or use -f
+
+➜  ~ docker container rm -f 927
+➜  ~ docker container ls
+CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS               NAMES
+
+
+What happens when we run a container?
+docker container run
+
+In background:
+Look for the image specified in the end of command. look for it locally in image cache, otherwise look in docker hub,download and store in image cache
+Creates new container based on the image( if version not specified, latest version) and prepares to start
+Gives the container a  virtual IP on a private network inside docker engine.
+opens a port 80 on host, and forwards to port 80 in the container.
+starts container by using CMD in the image Dockerfile.
+
+To specify a particular version of image
+~ docker container run --publish 80:80 --detach --name webhost nginx:1.11
+
+to change the host listening port
+~ docker container run --publish 9000:80 --detach --name webhost nginx
+
+fb3675d1be02dd1d1833cbf6701491281ad827318d2fa1011964fc72bcfcbf48
+
+
+Container versus VMs
+Containers are not Mini VMs
+1.) Containers are just processes
+2.) Limited to what resources what they can access
+3.) exits when the process stops.
+
+
+Container having or running Mongo DB
+docker run --name mongo -d mongo ( -d is for detach, mongo at last is name of image to find)
+docker top mongo
+
+➜  ~ docker ps
+CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS               NAMES
+daa4e4faa15e        mongo               "docker-entrypoint..."   52 seconds ago      Up 53 seconds       27017/tcp           mongo
+
+
+
+➜  ~ docker top mongo
+PID                 USER                TIME                COMMAND
+3365                999                 0:00                mongod
+
+ps aux |grep mongod
+
+➜  ~ ps aux |grep mongod
+ruchikal         10382   0.0  0.0  2434840    796 s001  S+    3:23PM   0:00.00 grep --color=auto --exclude-dir=.bzr --exclude-dir=CVS --exclude-dir=.git --exclude-dir=.hg --exclude-dir=.svn mongod
+
+the process can be seen from the host also though it is having a different process id because of the security considerations. (different from the regular processes, but it is not hiding inside a virtual machine that we can't get access to)
+
+
+Mysql
+
+docker container run -d -p 3306:3306 --name db1 -e MYSQL_RANDOM_ROOT_PASSWORD=yes mysql
+docker container logs db1
+
+Warning: Unable to load '/usr/share/zoneinfo/zone.tab' as time zone. Skipping it.
+GENERATED ROOT PASSWORD: Ee2cho8ee6haiDead2xooshaelie8Pha
+2017-04-13T10:54:09.875429Z 5 [Warning] 'user' entry 'root@localhost' ignored in --skip-name-resolve mode.
+2017-04-13T10:54:09.875463Z 5 [Warning] 'user' entry 'mysql.sys@localhost' ignored in --skip-name-resolve mode.
+2017-04-13T10:54:09.875479Z 5 [Warning] 'db' entry 'sys mysql.sys@localhost' ignored in --skip-name-resolve mode.
+2017-04-13T10:54:09.875502Z 5 [Warning] 'proxies_priv' entry '@ root@localhost' ignored in --skip-name-resolve mode.
+2017-04-13T10:54:09.875540Z 5 [Warning] 'tables_priv' entry 'sys_config mysql.sys@localhost' ignored in --skip-name-resolve mode.
+
+
+Assignment 1:
+
+➜  ~ docker container run -d --name mysql -p 3302:3302 --e MYSQL_RANDOM_ROOT_PASSWORD=yes mysql
+unknown flag: --e
+See 'docker container run --help'.
+➜  ~ docker container run -d --name mysql -p 3302:3302 -e MYSQL_RANDOM_ROOT_PASSWORD=yes mysql
+895c4bce5868a77a5c4ae10c9a4a6276899c628a9cc6f307c388c1ced8376711
+➜  ~ docker container run -d --name webserver -p 8080:80 httpd
+3dd6323383c0432c5616ee7146cd26405c488bbcddd0f62aa6e5a526cf37ca33
+➜  ~ docker container logs mysql
+Initializing database
+2017-04-14T04:07:05.147928Z 0 [Warning] TIMESTAMP with implicit DEFAULT value is deprecated. Please use --explicit_defaults_for_timestamp server option (see documentation for more details).
+2017-04-14T04:07:05.889708Z 0 [Warning] InnoDB: New log files created, LSN=45790
+2017-04-14T04:07:06.079182Z 0 [Warning] InnoDB: Creating foreign key constraint system tables.
+2017-04-14T04:07:06.211220Z 0 [Warning] No existing UUID has been found, so we assume that this is the first time that this server has been started. Generating a new UUID: d29c0b32-20c7-11e7-8132-0242ac110003.
+2017-04-14T04:07:06.235866Z 0 [Warning] Gtid table is not ready to be used. Table 'mysql.gtid_executed' cannot be opened.
+2017-04-14T04:07:06.236798Z 1 [Warning] root@localhost is created with an empty password ! Please consider switching off the --initialize-insecure option.
+2017-04-14T04:07:13.489837Z 1 [Warning] 'user' entry 'root@localhost' ignored in --skip-name-resolve mode.
+2017-04-14T04:07:13.489877Z 1 [Warning] 'user' entry 'mysql.sys@localhost' ignored in --skip-name-resolve mode.
+2017-04-14T04:07:13.489890Z 1 [Warning] 'db' entry 'sys mysql.sys@localhost' ignored in --skip-name-resolve mode.
+2017-04-14T04:07:13.489900Z 1 [Warning] 'proxies_priv' entry '@ root@localhost' ignored in --skip-name-resolve mode.
+2017-04-14T04:07:13.489931Z 1 [Warning] 'tables_priv' entry 'sys_config mysql.sys@localhost' ignored in --skip-name-resolve mode.
+Database initialized
+Initializing certificates
+Generating a 2048 bit RSA private key
+........+++
+............+++
+unable to write 'random state'
+writing new private key to 'ca-key.pem'
+-----
+Generating a 2048 bit RSA private key
+...................+++
+..............................................................................................................+++
+unable to write 'random state'
+writing new private key to 'server-key.pem'
+-----
+Generating a 2048 bit RSA private key
+...................+++
+.....................................+++
+unable to write 'random state'
+writing new private key to 'client-key.pem'
+-----
+Certificates initialized
+MySQL init process in progress...
+2017-04-14T04:07:18.737865Z 0 [Warning] TIMESTAMP with implicit DEFAULT value is deprecated. Please use --explicit_defaults_for_timestamp server option (see documentation for more details).
+2017-04-14T04:07:18.740986Z 0 [Note] mysqld (mysqld 5.7.18) starting as process 90 ...
+2017-04-14T04:07:18.745254Z 0 [Note] InnoDB: PUNCH HOLE support available
+2017-04-14T04:07:18.745286Z 0 [Note] InnoDB: Mutexes and rw_locks use GCC atomic builtins
+2017-04-14T04:07:18.745289Z 0 [Note] InnoDB: Uses event mutexes
+2017-04-14T04:07:18.745292Z 0 [Note] InnoDB: GCC builtin __atomic_thread_fence() is used for memory barrier
+2017-04-14T04:07:18.745294Z 0 [Note] InnoDB: Compressed tables use zlib 1.2.3
+2017-04-14T04:07:18.745296Z 0 [Note] InnoDB: Using Linux native AIO
+2017-04-14T04:07:18.745793Z 0 [Note] InnoDB: Number of pools: 1
+2017-04-14T04:07:18.746026Z 0 [Note] InnoDB: Using CPU crc32 instructions
+2017-04-14T04:07:18.748697Z 0 [Note] InnoDB: Initializing buffer pool, total size = 128M, instances = 1, chunk size = 128M
+2017-04-14T04:07:18.760993Z 0 [Note] InnoDB: Completed initialization of buffer pool
+2017-04-14T04:07:18.765201Z 0 [Note] InnoDB: If the mysqld execution user is authorized, page cleaner thread priority can be changed. See the man page of setpriority().
+2017-04-14T04:07:18.779616Z 0 [Note] InnoDB: Highest supported file format is Barracuda.
+2017-04-14T04:07:18.815507Z 0 [Note] InnoDB: Creating shared tablespace for temporary tables
+2017-04-14T04:07:18.815578Z 0 [Note] InnoDB: Setting file './ibtmp1' size to 12 MB. Physically writing the file full; Please wait ...
+2017-04-14T04:07:18.907428Z 0 [Note] InnoDB: File './ibtmp1' size is now 12 MB.
+2017-04-14T04:07:18.908582Z 0 [Note] InnoDB: 96 redo rollback segment(s) found. 96 redo rollback segment(s) are active.
+2017-04-14T04:07:18.908607Z 0 [Note] InnoDB: 32 non-redo rollback segment(s) are active.
+2017-04-14T04:07:18.909527Z 0 [Note] InnoDB: 5.7.18 started; log sequence number 2536321
+2017-04-14T04:07:18.909673Z 0 [Note] InnoDB: Loading buffer pool(s) from /var/lib/mysql/ib_buffer_pool
+2017-04-14T04:07:18.910074Z 0 [Note] Plugin 'FEDERATED' is disabled.
+2017-04-14T04:07:18.912262Z 0 [Note] InnoDB: Buffer pool(s) load completed at 170414  4:07:18
+2017-04-14T04:07:18.920101Z 0 [Note] Found ca.pem, server-cert.pem and server-key.pem in data directory. Trying to enable SSL support using them.
+2017-04-14T04:07:18.920318Z 0 [Warning] CA certificate ca.pem is self signed.
+2017-04-14T04:07:18.948231Z 0 [Warning] 'user' entry 'root@localhost' ignored in --skip-name-resolve mode.
+2017-04-14T04:07:18.948296Z 0 [Warning] 'user' entry 'mysql.sys@localhost' ignored in --skip-name-resolve mode.
+2017-04-14T04:07:18.948320Z 0 [Warning] 'db' entry 'sys mysql.sys@localhost' ignored in --skip-name-resolve mode.
+2017-04-14T04:07:18.948331Z 0 [Warning] 'proxies_priv' entry '@ root@localhost' ignored in --skip-name-resolve mode.
+2017-04-14T04:07:18.950292Z 0 [Warning] 'tables_priv' entry 'sys_config mysql.sys@localhost' ignored in --skip-name-resolve mode.
+2017-04-14T04:07:18.955447Z 0 [Note] Event Scheduler: Loaded 0 events
+2017-04-14T04:07:18.955713Z 0 [Note] mysqld: ready for connections.
+Version: '5.7.18'  socket: '/var/run/mysqld/mysqld.sock'  port: 0  MySQL Community Server (GPL)
+2017-04-14T04:07:18.955743Z 0 [Note] Executing 'SELECT * FROM INFORMATION_SCHEMA.TABLES;' to get a list of tables using the deprecated partition engine. You may use the startup option '--disable-partition-engine-check' to skip this check.
+2017-04-14T04:07:18.955746Z 0 [Note] Beginning of list of non-natively partitioned tables
+2017-04-14T04:07:18.966800Z 0 [Note] End of list of non-natively partitioned tables
+Warning: Unable to load '/usr/share/zoneinfo/iso3166.tab' as time zone. Skipping it.
+Warning: Unable to load '/usr/share/zoneinfo/leap-seconds.list' as time zone. Skipping it.
+Warning: Unable to load '/usr/share/zoneinfo/zone.tab' as time zone. Skipping it.
+GENERATED ROOT PASSWORD: teeshooQue7xoo0quohbiewaezeed5Ca
+2017-04-14T04:07:23.555623Z 5 [Warning] 'user' entry 'root@localhost' ignored in --skip-name-resolve mode.
+2017-04-14T04:07:23.555671Z 5 [Warning] 'user' entry 'mysql.sys@localhost' ignored in --skip-name-resolve mode.
+2017-04-14T04:07:23.555694Z 5 [Warning] 'db' entry 'sys mysql.sys@localhost' ignored in --skip-name-resolve mode.
+2017-04-14T04:07:23.555708Z 5 [Warning] 'proxies_priv' entry '@ root@localhost' ignored in --skip-name-resolve mode.
+2017-04-14T04:07:23.555749Z 5 [Warning] 'tables_priv' entry 'sys_config mysql.sys@localhost' ignored in --skip-name-resolve mode.
+
+2017-04-14T04:07:23.558979Z 0 [Note] Giving 0 client threads a chance to die gracefully
+2017-04-14T04:07:23.559003Z 0 [Note] Shutting down slave threads
+2017-04-14T04:07:23.559006Z 0 [Note] Forcefully disconnecting 0 remaining clients
+2017-04-14T04:07:23.559009Z 0 [Note] Event Scheduler: Purging the queue. 0 events
+2017-04-14T04:07:23.560535Z 0 [Note] Binlog end
+2017-04-14T04:07:23.561060Z 0 [Note] Shutting down plugin 'ngram'
+2017-04-14T04:07:23.561078Z 0 [Note] Shutting down plugin 'BLACKHOLE'
+2017-04-14T04:07:23.561082Z 0 [Note] Shutting down plugin 'partition'
+2017-04-14T04:07:23.561083Z 0 [Note] Shutting down plugin 'ARCHIVE'
+2017-04-14T04:07:23.561084Z 0 [Note] Shutting down plugin 'INNODB_SYS_VIRTUAL'
+2017-04-14T04:07:23.561086Z 0 [Note] Shutting down plugin 'INNODB_SYS_DATAFILES'
+2017-04-14T04:07:23.561087Z 0 [Note] Shutting down plugin 'INNODB_SYS_TABLESPACES'
+2017-04-14T04:07:23.561088Z 0 [Note] Shutting down plugin 'INNODB_SYS_FOREIGN_COLS'
+2017-04-14T04:07:23.561090Z 0 [Note] Shutting down plugin 'INNODB_SYS_FOREIGN'
+2017-04-14T04:07:23.561091Z 0 [Note] Shutting down plugin 'INNODB_SYS_FIELDS'
+2017-04-14T04:07:23.561092Z 0 [Note] Shutting down plugin 'INNODB_SYS_COLUMNS'
+2017-04-14T04:07:23.561093Z 0 [Note] Shutting down plugin 'INNODB_SYS_INDEXES'
+2017-04-14T04:07:23.561094Z 0 [Note] Shutting down plugin 'INNODB_SYS_TABLESTATS'
+2017-04-14T04:07:23.561095Z 0 [Note] Shutting down plugin 'INNODB_SYS_TABLES'
+2017-04-14T04:07:23.561096Z 0 [Note] Shutting down plugin 'INNODB_FT_INDEX_TABLE'
+2017-04-14T04:07:23.561097Z 0 [Note] Shutting down plugin 'INNODB_FT_INDEX_CACHE'
+2017-04-14T04:07:23.561099Z 0 [Note] Shutting down plugin 'INNODB_FT_CONFIG'
+2017-04-14T04:07:23.561100Z 0 [Note] Shutting down plugin 'INNODB_FT_BEING_DELETED'
+2017-04-14T04:07:23.561101Z 0 [Note] Shutting down plugin 'INNODB_FT_DELETED'
+2017-04-14T04:07:23.561102Z 0 [Note] Shutting down plugin 'INNODB_FT_DEFAULT_STOPWORD'
+2017-04-14T04:07:23.561103Z 0 [Note] Shutting down plugin 'INNODB_METRICS'
+2017-04-14T04:07:23.561113Z 0 [Note] Shutting down plugin 'INNODB_TEMP_TABLE_INFO'
+2017-04-14T04:07:23.561115Z 0 [Note] Shutting down plugin 'INNODB_BUFFER_POOL_STATS'
+2017-04-14T04:07:23.561116Z 0 [Note] Shutting down plugin 'INNODB_BUFFER_PAGE_LRU'
+2017-04-14T04:07:23.561117Z 0 [Note] Shutting down plugin 'INNODB_BUFFER_PAGE'
+2017-04-14T04:07:23.561118Z 0 [Note] Shutting down plugin 'INNODB_CMP_PER_INDEX_RESET'
+2017-04-14T04:07:23.561119Z 0 [Note] Shutting down plugin 'INNODB_CMP_PER_INDEX'
+2017-04-14T04:07:23.561120Z 0 [Note] Shutting down plugin 'INNODB_CMPMEM_RESET'
+2017-04-14T04:07:23.561122Z 0 [Note] Shutting down plugin 'INNODB_CMPMEM'
+2017-04-14T04:07:23.561123Z 0 [Note] Shutting down plugin 'INNODB_CMP_RESET'
+2017-04-14T04:07:23.561125Z 0 [Note] Shutting down plugin 'INNODB_CMP'
+2017-04-14T04:07:23.561134Z 0 [Note] Shutting down plugin 'INNODB_LOCK_WAITS'
+2017-04-14T04:07:23.561136Z 0 [Note] Shutting down plugin 'INNODB_LOCKS'
+2017-04-14T04:07:23.561137Z 0 [Note] Shutting down plugin 'INNODB_TRX'
+2017-04-14T04:07:23.561138Z 0 [Note] Shutting down plugin 'InnoDB'
+2017-04-14T04:07:23.561197Z 0 [Note] InnoDB: FTS optimize thread exiting.
+2017-04-14T04:07:23.561325Z 0 [Note] InnoDB: Starting shutdown...
+2017-04-14T04:07:23.663032Z 0 [Note] InnoDB: Dumping buffer pool(s) to /var/lib/mysql/ib_buffer_pool
+2017-04-14T04:07:23.664017Z 0 [Note] InnoDB: Buffer pool(s) dump completed at 170414  4:07:23
+2017-04-14T04:07:25.140523Z 0 [Note] InnoDB: Shutdown completed; log sequence number 12131738
+2017-04-14T04:07:25.143321Z 0 [Note] InnoDB: Removed temporary tablespace data file: "ibtmp1"
+2017-04-14T04:07:25.143353Z 0 [Note] Shutting down plugin 'MRG_MYISAM'
+2017-04-14T04:07:25.143357Z 0 [Note] Shutting down plugin 'MyISAM'
+2017-04-14T04:07:25.143365Z 0 [Note] Shutting down plugin 'CSV'
+2017-04-14T04:07:25.143368Z 0 [Note] Shutting down plugin 'MEMORY'
+2017-04-14T04:07:25.143370Z 0 [Note] Shutting down plugin 'PERFORMANCE_SCHEMA'
+2017-04-14T04:07:25.143387Z 0 [Note] Shutting down plugin 'sha256_password'
+2017-04-14T04:07:25.143399Z 0 [Note] Shutting down plugin 'mysql_native_password'
+2017-04-14T04:07:25.143511Z 0 [Note] Shutting down plugin 'binlog'
+2017-04-14T04:07:25.145640Z 0 [Note] mysqld: Shutdown complete
+
+
+MySQL init process done. Ready for start up.
+
+2017-04-14T04:07:25.439206Z 0 [Warning] TIMESTAMP with implicit DEFAULT value is deprecated. Please use --explicit_defaults_for_timestamp server option (see documentation for more details).
+2017-04-14T04:07:25.440146Z 0 [Note] mysqld (mysqld 5.7.18) starting as process 1 ...
+2017-04-14T04:07:25.442616Z 0 [Note] InnoDB: PUNCH HOLE support available
+2017-04-14T04:07:25.442671Z 0 [Note] InnoDB: Mutexes and rw_locks use GCC atomic builtins
+2017-04-14T04:07:25.442674Z 0 [Note] InnoDB: Uses event mutexes
+2017-04-14T04:07:25.442676Z 0 [Note] InnoDB: GCC builtin __atomic_thread_fence() is used for memory barrier
+2017-04-14T04:07:25.442678Z 0 [Note] InnoDB: Compressed tables use zlib 1.2.3
+2017-04-14T04:07:25.442679Z 0 [Note] InnoDB: Using Linux native AIO
+2017-04-14T04:07:25.442893Z 0 [Note] InnoDB: Number of pools: 1
+2017-04-14T04:07:25.442997Z 0 [Note] InnoDB: Using CPU crc32 instructions
+2017-04-14T04:07:25.443930Z 0 [Note] InnoDB: Initializing buffer pool, total size = 128M, instances = 1, chunk size = 128M
+2017-04-14T04:07:25.448809Z 0 [Note] InnoDB: Completed initialization of buffer pool
+2017-04-14T04:07:25.449961Z 0 [Note] InnoDB: If the mysqld execution user is authorized, page cleaner thread priority can be changed. See the man page of setpriority().
+2017-04-14T04:07:25.462056Z 0 [Note] InnoDB: Highest supported file format is Barracuda.
+2017-04-14T04:07:25.495404Z 0 [Note] InnoDB: Creating shared tablespace for temporary tables
+2017-04-14T04:07:25.495479Z 0 [Note] InnoDB: Setting file './ibtmp1' size to 12 MB. Physically writing the file full; Please wait ...
+2017-04-14T04:07:25.585262Z 0 [Note] InnoDB: File './ibtmp1' size is now 12 MB.
+2017-04-14T04:07:25.586350Z 0 [Note] InnoDB: 96 redo rollback segment(s) found. 96 redo rollback segment(s) are active.
+2017-04-14T04:07:25.586363Z 0 [Note] InnoDB: 32 non-redo rollback segment(s) are active.
+2017-04-14T04:07:25.587247Z 0 [Note] InnoDB: Waiting for purge to start
+2017-04-14T04:07:25.639225Z 0 [Note] InnoDB: 5.7.18 started; log sequence number 12131738
+2017-04-14T04:07:25.639546Z 0 [Note] InnoDB: Loading buffer pool(s) from /var/lib/mysql/ib_buffer_pool
+2017-04-14T04:07:25.639638Z 0 [Note] Plugin 'FEDERATED' is disabled.
+2017-04-14T04:07:25.644363Z 0 [Note] InnoDB: Buffer pool(s) load completed at 170414  4:07:25
+2017-04-14T04:07:25.644746Z 0 [Note] Found ca.pem, server-cert.pem and server-key.pem in data directory. Trying to enable SSL support using them.
+2017-04-14T04:07:25.644975Z 0 [Warning] CA certificate ca.pem is self signed.
+2017-04-14T04:07:25.646550Z 0 [Note] Server hostname (bind-address): '*'; port: 3306
+2017-04-14T04:07:25.646613Z 0 [Note] IPv6 is available.
+2017-04-14T04:07:25.646631Z 0 [Note]   - '::' resolves to '::';
+2017-04-14T04:07:25.646646Z 0 [Note] Server socket created on IP: '::'.
+2017-04-14T04:07:25.671349Z 0 [Warning] 'user' entry 'root@localhost' ignored in --skip-name-resolve mode.
+2017-04-14T04:07:25.671415Z 0 [Warning] 'user' entry 'mysql.sys@localhost' ignored in --skip-name-resolve mode.
+2017-04-14T04:07:25.671441Z 0 [Warning] 'db' entry 'sys mysql.sys@localhost' ignored in --skip-name-resolve mode.
+2017-04-14T04:07:25.671451Z 0 [Warning] 'proxies_priv' entry '@ root@localhost' ignored in --skip-name-resolve mode.
+2017-04-14T04:07:25.673891Z 0 [Warning] 'tables_priv' entry 'sys_config mysql.sys@localhost' ignored in --skip-name-resolve mode.
+2017-04-14T04:07:25.678152Z 0 [Note] Event Scheduler: Loaded 0 events
+2017-04-14T04:07:25.678381Z 0 [Note] mysqld: ready for connections.
+Version: '5.7.18'  socket: '/var/run/mysqld/mysqld.sock'  port: 3306  MySQL Community Server (GPL)
+2017-04-14T04:07:25.678411Z 0 [Note] Executing 'SELECT * FROM INFORMATION_SCHEMA.TABLES;' to get a list of tables using the deprecated partition engine. You may use the startup option '--disable-partition-engine-check' to skip this check.
+2017-04-14T04:07:25.678414Z 0 [Note] Beginning of list of non-natively partitioned tables
+2017-04-14T04:07:25.684874Z 0 [Note] End of list of non-natively partitioned tables
+➜  ~
+➜  ~ docker container logs mysql
+Initializing database
+2017-04-14T04:07:05.147928Z 0 [Warning] TIMESTAMP with implicit DEFAULT value is deprecated. Please use --explicit_defaults_for_timestamp server option (see documentation for more details).
+2017-04-14T04:07:05.889708Z 0 [Warning] InnoDB: New log files created, LSN=45790
+2017-04-14T04:07:06.079182Z 0 [Warning] InnoDB: Creating foreign key constraint system tables.
+2017-04-14T04:07:06.211220Z 0 [Warning] No existing UUID has been found, so we assume that this is the first time that this server has been started. Generating a new UUID: d29c0b32-20c7-11e7-8132-0242ac110003.
+2017-04-14T04:07:06.235866Z 0 [Warning] Gtid table is not ready to be used. Table 'mysql.gtid_executed' cannot be opened.
+2017-04-14T04:07:06.236798Z 1 [Warning] root@localhost is created with an empty password ! Please consider switching off the --initialize-insecure option.
+2017-04-14T04:07:13.489837Z 1 [Warning] 'user' entry 'root@localhost' ignored in --skip-name-resolve mode.
+2017-04-14T04:07:13.489877Z 1 [Warning] 'user' entry 'mysql.sys@localhost' ignored in --skip-name-resolve mode.
+2017-04-14T04:07:13.489890Z 1 [Warning] 'db' entry 'sys mysql.sys@localhost' ignored in --skip-name-resolve mode.
+2017-04-14T04:07:13.489900Z 1 [Warning] 'proxies_priv' entry '@ root@localhost' ignored in --skip-name-resolve mode.
+2017-04-14T04:07:13.489931Z 1 [Warning] 'tables_priv' entry 'sys_config mysql.sys@localhost' ignored in --skip-name-resolve mode.
+Database initialized
+Initializing certificates
+Generating a 2048 bit RSA private key
+........+++
+............+++
+unable to write 'random state'
+writing new private key to 'ca-key.pem'
+-----
+Generating a 2048 bit RSA private key
+...................+++
+..............................................................................................................+++
+unable to write 'random state'
+writing new private key to 'server-key.pem'
+-----
+Generating a 2048 bit RSA private key
+...................+++
+.....................................+++
+unable to write 'random state'
+writing new private key to 'client-key.pem'
+-----
+Certificates initialized
+MySQL init process in progress...
+2017-04-14T04:07:18.737865Z 0 [Warning] TIMESTAMP with implicit DEFAULT value is deprecated. Please use --explicit_defaults_for_timestamp server option (see documentation for more details).
+2017-04-14T04:07:18.740986Z 0 [Note] mysqld (mysqld 5.7.18) starting as process 90 ...
+2017-04-14T04:07:18.745254Z 0 [Note] InnoDB: PUNCH HOLE support available
+2017-04-14T04:07:18.745286Z 0 [Note] InnoDB: Mutexes and rw_locks use GCC atomic builtins
+2017-04-14T04:07:18.745289Z 0 [Note] InnoDB: Uses event mutexes
+2017-04-14T04:07:18.745292Z 0 [Note] InnoDB: GCC builtin __atomic_thread_fence() is used for memory barrier
+2017-04-14T04:07:18.745294Z 0 [Note] InnoDB: Compressed tables use zlib 1.2.3
+2017-04-14T04:07:18.745296Z 0 [Note] InnoDB: Using Linux native AIO
+2017-04-14T04:07:18.745793Z 0 [Note] InnoDB: Number of pools: 1
+2017-04-14T04:07:18.746026Z 0 [Note] InnoDB: Using CPU crc32 instructions
+2017-04-14T04:07:18.748697Z 0 [Note] InnoDB: Initializing buffer pool, total size = 128M, instances = 1, chunk size = 128M
+2017-04-14T04:07:18.760993Z 0 [Note] InnoDB: Completed initialization of buffer pool
+2017-04-14T04:07:18.765201Z 0 [Note] InnoDB: If the mysqld execution user is authorized, page cleaner thread priority can be changed. See the man page of setpriority().
+2017-04-14T04:07:18.779616Z 0 [Note] InnoDB: Highest supported file format is Barracuda.
+2017-04-14T04:07:18.815507Z 0 [Note] InnoDB: Creating shared tablespace for temporary tables
+2017-04-14T04:07:18.815578Z 0 [Note] InnoDB: Setting file './ibtmp1' size to 12 MB. Physically writing the file full; Please wait ...
+2017-04-14T04:07:18.907428Z 0 [Note] InnoDB: File './ibtmp1' size is now 12 MB.
+2017-04-14T04:07:18.908582Z 0 [Note] InnoDB: 96 redo rollback segment(s) found. 96 redo rollback segment(s) are active.
+2017-04-14T04:07:18.908607Z 0 [Note] InnoDB: 32 non-redo rollback segment(s) are active.
+2017-04-14T04:07:18.909527Z 0 [Note] InnoDB: 5.7.18 started; log sequence number 2536321
+2017-04-14T04:07:18.909673Z 0 [Note] InnoDB: Loading buffer pool(s) from /var/lib/mysql/ib_buffer_pool
+2017-04-14T04:07:18.910074Z 0 [Note] Plugin 'FEDERATED' is disabled.
+2017-04-14T04:07:18.912262Z 0 [Note] InnoDB: Buffer pool(s) load completed at 170414  4:07:18
+2017-04-14T04:07:18.920101Z 0 [Note] Found ca.pem, server-cert.pem and server-key.pem in data directory. Trying to enable SSL support using them.
+2017-04-14T04:07:18.920318Z 0 [Warning] CA certificate ca.pem is self signed.
+2017-04-14T04:07:18.948231Z 0 [Warning] 'user' entry 'root@localhost' ignored in --skip-name-resolve mode.
+2017-04-14T04:07:18.948296Z 0 [Warning] 'user' entry 'mysql.sys@localhost' ignored in --skip-name-resolve mode.
+2017-04-14T04:07:18.948320Z 0 [Warning] 'db' entry 'sys mysql.sys@localhost' ignored in --skip-name-resolve mode.
+2017-04-14T04:07:18.948331Z 0 [Warning] 'proxies_priv' entry '@ root@localhost' ignored in --skip-name-resolve mode.
+2017-04-14T04:07:18.950292Z 0 [Warning] 'tables_priv' entry 'sys_config mysql.sys@localhost' ignored in --skip-name-resolve mode.
+2017-04-14T04:07:18.955447Z 0 [Note] Event Scheduler: Loaded 0 events
+2017-04-14T04:07:18.955713Z 0 [Note] mysqld: ready for connections.
+Version: '5.7.18'  socket: '/var/run/mysqld/mysqld.sock'  port: 0  MySQL Community Server (GPL)
+2017-04-14T04:07:18.955743Z 0 [Note] Executing 'SELECT * FROM INFORMATION_SCHEMA.TABLES;' to get a list of tables using the deprecated partition engine. You may use the startup option '--disable-partition-engine-check' to skip this check.
+2017-04-14T04:07:18.955746Z 0 [Note] Beginning of list of non-natively partitioned tables
+2017-04-14T04:07:18.966800Z 0 [Note] End of list of non-natively partitioned tables
+Warning: Unable to load '/usr/share/zoneinfo/iso3166.tab' as time zone. Skipping it.
+Warning: Unable to load '/usr/share/zoneinfo/leap-seconds.list' as time zone. Skipping it.
+Warning: Unable to load '/usr/share/zoneinfo/zone.tab' as time zone. Skipping it.
+GENERATED ROOT PASSWORD: teeshooQue7xoo0quohbiewaezeed5Ca
+2017-04-14T04:07:23.555623Z 5 [Warning] 'user' entry 'root@localhost' ignored in --skip-name-resolve mode.
+2017-04-14T04:07:23.555671Z 5 [Warning] 'user' entry 'mysql.sys@localhost' ignored in --skip-name-resolve mode.
+2017-04-14T04:07:23.555694Z 5 [Warning] 'db' entry 'sys mysql.sys@localhost' ignored in --skip-name-resolve mode.
+2017-04-14T04:07:23.555708Z 5 [Warning] 'proxies_priv' entry '@ root@localhost' ignored in --skip-name-resolve mode.
+2017-04-14T04:07:23.555749Z 5 [Warning] 'tables_priv' entry 'sys_config mysql.sys@localhost' ignored in --skip-name-resolve mode.
+
+2017-04-14T04:07:23.558979Z 0 [Note] Giving 0 client threads a chance to die gracefully
+2017-04-14T04:07:23.559003Z 0 [Note] Shutting down slave threads
+2017-04-14T04:07:23.559006Z 0 [Note] Forcefully disconnecting 0 remaining clients
+2017-04-14T04:07:23.559009Z 0 [Note] Event Scheduler: Purging the queue. 0 events
+2017-04-14T04:07:23.560535Z 0 [Note] Binlog end
+2017-04-14T04:07:23.561060Z 0 [Note] Shutting down plugin 'ngram'
+2017-04-14T04:07:23.561078Z 0 [Note] Shutting down plugin 'BLACKHOLE'
+2017-04-14T04:07:23.561082Z 0 [Note] Shutting down plugin 'partition'
+2017-04-14T04:07:23.561083Z 0 [Note] Shutting down plugin 'ARCHIVE'
+2017-04-14T04:07:23.561084Z 0 [Note] Shutting down plugin 'INNODB_SYS_VIRTUAL'
+2017-04-14T04:07:23.561086Z 0 [Note] Shutting down plugin 'INNODB_SYS_DATAFILES'
+2017-04-14T04:07:23.561087Z 0 [Note] Shutting down plugin 'INNODB_SYS_TABLESPACES'
+2017-04-14T04:07:23.561088Z 0 [Note] Shutting down plugin 'INNODB_SYS_FOREIGN_COLS'
+2017-04-14T04:07:23.561090Z 0 [Note] Shutting down plugin 'INNODB_SYS_FOREIGN'
+2017-04-14T04:07:23.561091Z 0 [Note] Shutting down plugin 'INNODB_SYS_FIELDS'
+2017-04-14T04:07:23.561092Z 0 [Note] Shutting down plugin 'INNODB_SYS_COLUMNS'
+2017-04-14T04:07:23.561093Z 0 [Note] Shutting down plugin 'INNODB_SYS_INDEXES'
+2017-04-14T04:07:23.561094Z 0 [Note] Shutting down plugin 'INNODB_SYS_TABLESTATS'
+2017-04-14T04:07:23.561095Z 0 [Note] Shutting down plugin 'INNODB_SYS_TABLES'
+2017-04-14T04:07:23.561096Z 0 [Note] Shutting down plugin 'INNODB_FT_INDEX_TABLE'
+2017-04-14T04:07:23.561097Z 0 [Note] Shutting down plugin 'INNODB_FT_INDEX_CACHE'
+2017-04-14T04:07:23.561099Z 0 [Note] Shutting down plugin 'INNODB_FT_CONFIG'
+2017-04-14T04:07:23.561100Z 0 [Note] Shutting down plugin 'INNODB_FT_BEING_DELETED'
+2017-04-14T04:07:23.561101Z 0 [Note] Shutting down plugin 'INNODB_FT_DELETED'
+2017-04-14T04:07:23.561102Z 0 [Note] Shutting down plugin 'INNODB_FT_DEFAULT_STOPWORD'
+2017-04-14T04:07:23.561103Z 0 [Note] Shutting down plugin 'INNODB_METRICS'
+2017-04-14T04:07:23.561113Z 0 [Note] Shutting down plugin 'INNODB_TEMP_TABLE_INFO'
+2017-04-14T04:07:23.561115Z 0 [Note] Shutting down plugin 'INNODB_BUFFER_POOL_STATS'
+2017-04-14T04:07:23.561116Z 0 [Note] Shutting down plugin 'INNODB_BUFFER_PAGE_LRU'
+2017-04-14T04:07:23.561117Z 0 [Note] Shutting down plugin 'INNODB_BUFFER_PAGE'
+2017-04-14T04:07:23.561118Z 0 [Note] Shutting down plugin 'INNODB_CMP_PER_INDEX_RESET'
+2017-04-14T04:07:23.561119Z 0 [Note] Shutting down plugin 'INNODB_CMP_PER_INDEX'
+2017-04-14T04:07:23.561120Z 0 [Note] Shutting down plugin 'INNODB_CMPMEM_RESET'
+2017-04-14T04:07:23.561122Z 0 [Note] Shutting down plugin 'INNODB_CMPMEM'
+2017-04-14T04:07:23.561123Z 0 [Note] Shutting down plugin 'INNODB_CMP_RESET'
+2017-04-14T04:07:23.561125Z 0 [Note] Shutting down plugin 'INNODB_CMP'
+2017-04-14T04:07:23.561134Z 0 [Note] Shutting down plugin 'INNODB_LOCK_WAITS'
+2017-04-14T04:07:23.561136Z 0 [Note] Shutting down plugin 'INNODB_LOCKS'
+2017-04-14T04:07:23.561137Z 0 [Note] Shutting down plugin 'INNODB_TRX'
+2017-04-14T04:07:23.561138Z 0 [Note] Shutting down plugin 'InnoDB'
+2017-04-14T04:07:23.561197Z 0 [Note] InnoDB: FTS optimize thread exiting.
+2017-04-14T04:07:23.561325Z 0 [Note] InnoDB: Starting shutdown...
+2017-04-14T04:07:23.663032Z 0 [Note] InnoDB: Dumping buffer pool(s) to /var/lib/mysql/ib_buffer_pool
+2017-04-14T04:07:23.664017Z 0 [Note] InnoDB: Buffer pool(s) dump completed at 170414  4:07:23
+2017-04-14T04:07:25.140523Z 0 [Note] InnoDB: Shutdown completed; log sequence number 12131738
+2017-04-14T04:07:25.143321Z 0 [Note] InnoDB: Removed temporary tablespace data file: "ibtmp1"
+2017-04-14T04:07:25.143353Z 0 [Note] Shutting down plugin 'MRG_MYISAM'
+2017-04-14T04:07:25.143357Z 0 [Note] Shutting down plugin 'MyISAM'
+2017-04-14T04:07:25.143365Z 0 [Note] Shutting down plugin 'CSV'
+2017-04-14T04:07:25.143368Z 0 [Note] Shutting down plugin 'MEMORY'
+2017-04-14T04:07:25.143370Z 0 [Note] Shutting down plugin 'PERFORMANCE_SCHEMA'
+2017-04-14T04:07:25.143387Z 0 [Note] Shutting down plugin 'sha256_password'
+2017-04-14T04:07:25.143399Z 0 [Note] Shutting down plugin 'mysql_native_password'
+2017-04-14T04:07:25.143511Z 0 [Note] Shutting down plugin 'binlog'
+2017-04-14T04:07:25.145640Z 0 [Note] mysqld: Shutdown complete
+
+
+MySQL init process done. Ready for start up.
+
+2017-04-14T04:07:25.439206Z 0 [Warning] TIMESTAMP with implicit DEFAULT value is deprecated. Please use --explicit_defaults_for_timestamp server option (see documentation for more details).
+2017-04-14T04:07:25.440146Z 0 [Note] mysqld (mysqld 5.7.18) starting as process 1 ...
+2017-04-14T04:07:25.442616Z 0 [Note] InnoDB: PUNCH HOLE support available
+2017-04-14T04:07:25.442671Z 0 [Note] InnoDB: Mutexes and rw_locks use GCC atomic builtins
+2017-04-14T04:07:25.442674Z 0 [Note] InnoDB: Uses event mutexes
+2017-04-14T04:07:25.442676Z 0 [Note] InnoDB: GCC builtin __atomic_thread_fence() is used for memory barrier
+2017-04-14T04:07:25.442678Z 0 [Note] InnoDB: Compressed tables use zlib 1.2.3
+2017-04-14T04:07:25.442679Z 0 [Note] InnoDB: Using Linux native AIO
+2017-04-14T04:07:25.442893Z 0 [Note] InnoDB: Number of pools: 1
+2017-04-14T04:07:25.442997Z 0 [Note] InnoDB: Using CPU crc32 instructions
+2017-04-14T04:07:25.443930Z 0 [Note] InnoDB: Initializing buffer pool, total size = 128M, instances = 1, chunk size = 128M
+2017-04-14T04:07:25.448809Z 0 [Note] InnoDB: Completed initialization of buffer pool
+2017-04-14T04:07:25.449961Z 0 [Note] InnoDB: If the mysqld execution user is authorized, page cleaner thread priority can be changed. See the man page of setpriority().
+2017-04-14T04:07:25.462056Z 0 [Note] InnoDB: Highest supported file format is Barracuda.
+2017-04-14T04:07:25.495404Z 0 [Note] InnoDB: Creating shared tablespace for temporary tables
+2017-04-14T04:07:25.495479Z 0 [Note] InnoDB: Setting file './ibtmp1' size to 12 MB. Physically writing the file full; Please wait ...
+2017-04-14T04:07:25.585262Z 0 [Note] InnoDB: File './ibtmp1' size is now 12 MB.
+2017-04-14T04:07:25.586350Z 0 [Note] InnoDB: 96 redo rollback segment(s) found. 96 redo rollback segment(s) are active.
+2017-04-14T04:07:25.586363Z 0 [Note] InnoDB: 32 non-redo rollback segment(s) are active.
+2017-04-14T04:07:25.587247Z 0 [Note] InnoDB: Waiting for purge to start
+2017-04-14T04:07:25.639225Z 0 [Note] InnoDB: 5.7.18 started; log sequence number 12131738
+2017-04-14T04:07:25.639546Z 0 [Note] InnoDB: Loading buffer pool(s) from /var/lib/mysql/ib_buffer_pool
+2017-04-14T04:07:25.639638Z 0 [Note] Plugin 'FEDERATED' is disabled.
+2017-04-14T04:07:25.644363Z 0 [Note] InnoDB: Buffer pool(s) load completed at 170414  4:07:25
+2017-04-14T04:07:25.644746Z 0 [Note] Found ca.pem, server-cert.pem and server-key.pem in data directory. Trying to enable SSL support using them.
+2017-04-14T04:07:25.644975Z 0 [Warning] CA certificate ca.pem is self signed.
+2017-04-14T04:07:25.646550Z 0 [Note] Server hostname (bind-address): '*'; port: 3306
+2017-04-14T04:07:25.646613Z 0 [Note] IPv6 is available.
+2017-04-14T04:07:25.646631Z 0 [Note]   - '::' resolves to '::';
+2017-04-14T04:07:25.646646Z 0 [Note] Server socket created on IP: '::'.
+2017-04-14T04:07:25.671349Z 0 [Warning] 'user' entry 'root@localhost' ignored in --skip-name-resolve mode.
+2017-04-14T04:07:25.671415Z 0 [Warning] 'user' entry 'mysql.sys@localhost' ignored in --skip-name-resolve mode.
+2017-04-14T04:07:25.671441Z 0 [Warning] 'db' entry 'sys mysql.sys@localhost' ignored in --skip-name-resolve mode.
+2017-04-14T04:07:25.671451Z 0 [Warning] 'proxies_priv' entry '@ root@localhost' ignored in --skip-name-resolve mode.
+2017-04-14T04:07:25.673891Z 0 [Warning] 'tables_priv' entry 'sys_config mysql.sys@localhost' ignored in --skip-name-resolve mode.
+2017-04-14T04:07:25.678152Z 0 [Note] Event Scheduler: Loaded 0 events
+2017-04-14T04:07:25.678381Z 0 [Note] mysqld: ready for connections.
+Version: '5.7.18'  socket: '/var/run/mysqld/mysqld.sock'  port: 3306  MySQL Community Server (GPL)
+2017-04-14T04:07:25.678411Z 0 [Note] Executing 'SELECT * FROM INFORMATION_SCHEMA.TABLES;' to get a list of tables using the deprecated partition engine. You may use the startup option '--disable-partition-engine-check' to skip this check.
+2017-04-14T04:07:25.678414Z 0 [Note] Beginning of list of non-natively partitioned tables
+2017-04-14T04:07:25.684874Z 0 [Note] End of list of non-natively partitioned tables
+➜  ~ docker container ps
+CONTAINER ID        IMAGE               COMMAND                  CREATED              STATUS              PORTS                              NAMES
+3dd6323383c0        httpd               "httpd-foreground"       54 seconds ago       Up 54 seconds       0.0.0.0:8080->80/tcp               webserver
+895c4bce5868        mysql               "docker-entrypoint..."   About a minute ago   Up About a minute   0.0.0.0:3302->3302/tcp, 3306/tcp   mysql
+b16bdf466027        mongo               "docker-entrypoint..."   9 minutes ago        Up 9 minutes        0.0.0.0:80->80/tcp, 27017/tcp      mongo
+➜  ~ docker rm -f b16
+b16
+➜  ~ docker container run -d --name proxy -p 80:80 nginx
+68e11b329d90b277523f64b60e6beb1cf2e53f5c78ee8621429c471d2012721a
+➜  ~ docker ps
+CONTAINER ID        IMAGE               COMMAND                  CREATED              STATUS              PORTS                              NAMES
+68e11b329d90        nginx               "nginx -g 'daemon ..."   4 seconds ago        Up 3 seconds        0.0.0.0:80->80/tcp, 443/tcp        proxy
+3dd6323383c0        httpd               "httpd-foreground"       About a minute ago   Up About a minute   0.0.0.0:8080->80/tcp               webserver
+895c4bce5868        mysql               "docker-entrypoint..."   2 minutes ago        Up 2 minutes        0.0.0.0:3302->3302/tcp, 3306/tcp   mysql
+➜  ~ docker container ls
+CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS                              NAMES
+68e11b329d90        nginx               "nginx -g 'daemon ..."   22 seconds ago      Up 21 seconds       0.0.0.0:80->80/tcp, 443/tcp        proxy
+3dd6323383c0        httpd               "httpd-foreground"       2 minutes ago       Up 2 minutes        0.0.0.0:8080->80/tcp               webserver
+895c4bce5868        mysql               "docker-entrypoint..."   2 minutes ago       Up 2 minutes        0.0.0.0:3302->3302/tcp, 3306/tcp   mysql
+➜  ~ curl localhost
+<!DOCTYPE html>
+<html>
+<head>
+<title>Welcome to nginx!</title>
+<style>
+    body {
+        width: 35em;
+        margin: 0 auto;
+        font-family: Tahoma, Verdana, Arial, sans-serif;
+    }
+</style>
+</head>
+<body>
+<h1>Welcome to nginx!</h1>
+<p>If you see this page, the nginx web server is successfully installed and
+working. Further configuration is required.</p>
+
+<p>For online documentation and support please refer to
+<a href="http://nginx.org/">nginx.org</a>.<br/>
+Commercial support is available at
+<a href="http://nginx.com/">nginx.com</a>.</p>
+
+<p><em>Thank you for using nginx.</em></p>
+</body>
+</html>
+➜  ~ curl localhost:8080
+<html><body><h1>It works!</h1></body></html>
+➜  ~ curl localhost:3306
+curl: (7) Failed to connect to localhost port 3306: Connection refused
+➜  ~ docker container stop nginx
+Error response from daemon: No such container: nginx
+➜  ~ docker container ls
+CONTAINER ID        IMAGE               COMMAND                  CREATED              STATUS              PORTS                              NAMES
+68e11b329d90        nginx               "nginx -g 'daemon ..."   About a minute ago   Up About a minute   0.0.0.0:80->80/tcp, 443/tcp        proxy
+3dd6323383c0        httpd               "httpd-foreground"       3 minutes ago        Up 3 minutes        0.0.0.0:8080->80/tcp               webserver
+895c4bce5868        mysql               "docker-entrypoint..."   3 minutes ago        Up 3 minutes        0.0.0.0:3302->3302/tcp, 3306/tcp   mysql
+➜  ~ docker container stop 68e
+68e
+➜  ~ docker container stop 3dd
+^[[A3dd
+➜  ~ docker container stop 895
+docker contai895
+➜  ~ docker container rm 68e
+68e
+➜  ~ docker container rm 3dd
+3dd
+➜  ~ docker container rm 895
+895
+➜  ~ docker image ls
+REPOSITORY          TAG                 IMAGE ID            CREATED             SIZE
+mysql               latest              d5127813070b        2 days ago          407 MB
+mongo               latest              48e26382080a        6 days ago          360 MB
+nginx               1.11                5766334bdaa0        7 days ago          183 MB
+nginx               latest              5766334bdaa0        7 days ago          183 MB
+httpd               latest              278cd55ca6c5        3 weeks ago         177 MB
+hello-world         latest              48b5124b2768        3 months ago        1.84 kB
+
+
+Commands to understand what is going on inside our running containers ???
+
+1.) docker container top (process list in one container)
+2.) docker container inspect (details of one container config)
+3.) docker container stats (performance stats for all containers)
+
+
+
+➜  ~ docker container top proxy
+PID                 USER                TIME                COMMAND
+3279                root                0:00                nginx: master process nginx -g daemon off;
+3299                104                 0:00                nginx: worker process
+➜  ~ docker container inspect proxy
+[
+    {
+        "Id": "1d65470f68d4115ad6ecd0f708a3103eb0a03b683a0ccc27e0bd1cc2e071267a",
+        "Created": "2017-04-14T04:16:22.404208839Z",
+        "Path": "nginx",
+        "Args": [
+            "-g",
+            "daemon off;"
+        ],
+        "State": {
+            "Status": "running",
+            "Running": true,
+            "Paused": false,
+            "Restarting": false,
+            "OOMKilled": false,
+            "Dead": false,
+            "Pid": 3279,
+            "ExitCode": 0,
+            "Error": "",
+            "StartedAt": "2017-04-14T04:16:23.127841796Z",
+            "FinishedAt": "0001-01-01T00:00:00Z"
+        },
+        "Image": "sha256:5766334bdaa0bc37f1f0c02cb94c351f9b076bcffa042d6ce811b0fd9bc31f3b",
+        "ResolvConfPath": "/var/lib/docker/containers/1d65470f68d4115ad6ecd0f708a3103eb0a03b683a0ccc27e0bd1cc2e071267a/resolv.conf",
+        "HostnamePath": "/var/lib/docker/containers/1d65470f68d4115ad6ecd0f708a3103eb0a03b683a0ccc27e0bd1cc2e071267a/hostname",
+        "HostsPath": "/var/lib/docker/containers/1d65470f68d4115ad6ecd0f708a3103eb0a03b683a0ccc27e0bd1cc2e071267a/hosts",
+        "LogPath": "/var/lib/docker/containers/1d65470f68d4115ad6ecd0f708a3103eb0a03b683a0ccc27e0bd1cc2e071267a/1d65470f68d4115ad6ecd0f708a3103eb0a03b683a0ccc27e0bd1cc2e071267a-json.log",
+        "Name": "/proxy",
+        "RestartCount": 0,
+        "Driver": "overlay2",
+        "MountLabel": "",
+        "ProcessLabel": "",
+        "AppArmorProfile": "",
+        "ExecIDs": null,
+        "HostConfig": {
+            "Binds": null,
+            "ContainerIDFile": "",
+            "LogConfig": {
+                "Type": "json-file",
+                "Config": {}
+            },
+            "NetworkMode": "default",
+            "PortBindings": {
+                "80/tcp": [
+                    {
+                        "HostIp": "",
+                        "HostPort": "80"
+                    }
+                ]
+            },
+            "RestartPolicy": {
+                "Name": "no",
+                "MaximumRetryCount": 0
+            },
+            "AutoRemove": false,
+            "VolumeDriver": "",
+            "VolumesFrom": null,
+            "CapAdd": null,
+            "CapDrop": null,
+            "Dns": [],
+            "DnsOptions": [],
+            "DnsSearch": [],
+            "ExtraHosts": null,
+            "GroupAdd": null,
+            "IpcMode": "",
+            "Cgroup": "",
+            "Links": null,
+            "OomScoreAdj": 0,
+            "PidMode": "",
+            "Privileged": false,
+            "PublishAllPorts": false,
+            "ReadonlyRootfs": false,
+            "SecurityOpt": null,
+            "UTSMode": "",
+            "UsernsMode": "",
+            "ShmSize": 67108864,
+            "Runtime": "runc",
+            "ConsoleSize": [
+                0,
+                0
+            ],
+            "Isolation": "",
+            "CpuShares": 0,
+            "Memory": 0,
+            "NanoCpus": 0,
+            "CgroupParent": "",
+            "BlkioWeight": 0,
+            "BlkioWeightDevice": null,
+            "BlkioDeviceReadBps": null,
+            "BlkioDeviceWriteBps": null,
+            "BlkioDeviceReadIOps": null,
+            "BlkioDeviceWriteIOps": null,
+            "CpuPeriod": 0,
+            "CpuQuota": 0,
+            "CpuRealtimePeriod": 0,
+            "CpuRealtimeRuntime": 0,
+            "CpusetCpus": "",
+            "CpusetMems": "",
+            "Devices": [],
+            "DiskQuota": 0,
+            "KernelMemory": 0,
+            "MemoryReservation": 0,
+            "MemorySwap": 0,
+            "MemorySwappiness": -1,
+            "OomKillDisable": false,
+            "PidsLimit": 0,
+            "Ulimits": null,
+            "CpuCount": 0,
+            "CpuPercent": 0,
+            "IOMaximumIOps": 0,
+            "IOMaximumBandwidth": 0
+        },
+        "GraphDriver": {
+            "Name": "overlay2",
+            "Data": {
+                "LowerDir": "/var/lib/docker/overlay2/5a8d21d0143f5c312b7c27357a9ec6ce46ee0f46e935255219777b261389f488-init/diff:/var/lib/docker/overlay2/b068e0ce70d67a4f9acbf093c1debf94d748d265abd6809217ce297502fba69d/diff:/var/lib/docker/overlay2/2f459e1b43946b7aafeece065117b07a27260866eb2fb03d4fb9e0877f8eea1b/diff:/var/lib/docker/overlay2/26bcd382be2327f7b0e1419e1faca699ed1ee21e6d7f83ccbb5c2d98c005c88d/diff:/var/lib/docker/overlay2/2736a1966952d2352b78adbab30de317e3c384f91c44adfe018873589ac40b45/diff",
+                "MergedDir": "/var/lib/docker/overlay2/5a8d21d0143f5c312b7c27357a9ec6ce46ee0f46e935255219777b261389f488/merged",
+                "UpperDir": "/var/lib/docker/overlay2/5a8d21d0143f5c312b7c27357a9ec6ce46ee0f46e935255219777b261389f488/diff",
+                "WorkDir": "/var/lib/docker/overlay2/5a8d21d0143f5c312b7c27357a9ec6ce46ee0f46e935255219777b261389f488/work"
+            }
+        },
+        "Mounts": [],
+        "Config": {
+            "Hostname": "1d65470f68d4",
+            "Domainname": "",
+            "User": "",
+            "AttachStdin": false,
+            "AttachStdout": false,
+            "AttachStderr": false,
+            "ExposedPorts": {
+                "443/tcp": {},
+                "80/tcp": {}
+            },
+            "Tty": false,
+            "OpenStdin": false,
+            "StdinOnce": false,
+            "Env": [
+                "no_proxy=*.local, 169.254/16",
+                "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+                "NGINX_VERSION=1.11.13-1~jessie"
+            ],
+            "Cmd": [
+                "nginx",
+                "-g",
+                "daemon off;"
+            ],
+            "ArgsEscaped": true,
+            "Image": "nginx",
+            "Volumes": null,
+            "WorkingDir": "",
+            "Entrypoint": null,
+            "OnBuild": null,
+            "Labels": {}
+        },
+        "NetworkSettings": {
+            "Bridge": "",
+            "SandboxID": "eb3035c550ada32dd70a118bbbbd424461f0aea6ccf25fb3e7714eb81cf0e184",
+            "HairpinMode": false,
+            "LinkLocalIPv6Address": "",
+            "LinkLocalIPv6PrefixLen": 0,
+            "Ports": {
+                "443/tcp": null,
+                "80/tcp": [
+                    {
+                        "HostIp": "0.0.0.0",
+                        "HostPort": "80"
+                    }
+                ]
+            },
+            "SandboxKey": "/var/run/docker/netns/eb3035c550ad",
+            "SecondaryIPAddresses": null,
+            "SecondaryIPv6Addresses": null,
+            "EndpointID": "c1c9c3cf8a65995873c5ac44389a6e5a6778a70a2687d0b8567829da3adf4f86",
+            "Gateway": "172.17.0.1",
+            "GlobalIPv6Address": "",
+            "GlobalIPv6PrefixLen": 0,
+            "IPAddress": "172.17.0.2",
+            "IPPrefixLen": 16,
+            "IPv6Gateway": "",
+            "MacAddress": "02:42:ac:11:00:02",
+            "Networks": {
+                "bridge": {
+                    "IPAMConfig": null,
+                    "Links": null,
+                    "Aliases": null,
+                    "NetworkID": "0ae38f5bc9011e94812b6af8df585ef2f6b25eda5378ecf15e957e5cd841bc39",
+                    "EndpointID": "c1c9c3cf8a65995873c5ac44389a6e5a6778a70a2687d0b8567829da3adf4f86",
+                    "Gateway": "172.17.0.1",
+                    "IPAddress": "172.17.0.2",
+                    "IPPrefixLen": 16,
+                    "IPv6Gateway": "",
+                    "GlobalIPv6Address": "",
+                    "GlobalIPv6PrefixLen": 0,
+                    "MacAddress": "02:42:ac:11:00:02"
+                }
+            }
+        }
+    }
+]
+
+➜  ~ docker container stats (it is for all container) (it gives streaming live view of the resource usage of the container)
+CONTAINER           CPU %               MEM USAGE / LIMIT       MEM %               NET I/O             BLOCK I/O           PIDS
+1d65470f68d4        0.00%               1.973 MiB / 1.952 GiB   0.10%               1.05 kB / 858 B     0 B / 0 B           2
+CONTAINER           CPU %               MEM USAGE / LIMIT       MEM %               NET I/O             BLOCK I/O           PIDS
+1d65470f68d4        0.00%               1.973 MiB / 1.952 GiB   0.10%               1.05 kB / 858 B     0 B / 0 B           2
+CONTAINER           CPU %               MEM USAGE / LIMIT       MEM %               NET I/O             BLOCK I/O           PIDS
+
+Getting a shell inside a container:
+
+1.) docker container run -it ( start a new container interactively)
+2.) docker container exec -it (tun additional commands in existing container)
+3.) Different linux distros in containers
+
+
+-it are actually two separate commands
+  -t, --tty                                   Allocate a pseudo-TTY ( Simulates a real terminal like what SSH does)
+ -i, --interactive                           Keep STDIN open even if not attached
+
+
+➜  ~ docker container run -it --name pro nginx bash [ bash is the command you want to pass to the container on startup ]
+root@36bdf0be82e5:/# [ This root does not mean you are root on the host, just you are acting as root on the container] 36bdf0be82e5 is container id
+root@36bdf0be82e5:/# apt-get install pip
+Reading package lists... Done
+Building dependency tree
+Reading state information... Done
+E: Unable to locate package pip
+root@36bdf0be82e5:/# exit
+exit
+➜  ~ docker container ls
+CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS                         NAMES
+
+(the container is gone after the exit)
+
+➜  ~ docker container ls -a
+CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS                        PORTS                         NAMES
+36bdf0be82e5        nginx               "bash"                   2 minutes ago       Exited (100) 45 seconds ago                                 pro
+
+See the default command has been changed to bash
+
+
+Lets have a full fledged Ubuntu
+➜  ~ docker container run -it --name ubuntu ubuntu ( default command to ubuntu is bash, so no need of passing that )
+
+container with ubuntu has the minimalistic version of ubuntu. but you can have more packages installed with apt package manager.
+#apt-get install -y curl
+#curl google.com
+#exit ( will stop the container)
+
+docker container start <container-id> ( but you want the same container in interactive mode)
+-a attach
+docker container start -ai <container-id> ( this container will have everything you installed earlier)
+
+To the already running container:
+➜  ~ docker container exec -it mysql_1 bash
+
+docker container exec ( run additional process in running container) ( it does not affect the root process for mysql daemon, so even after exiting the bash, the container will show up in docker container ls)
+
+
+Alpine: a small security focussed distribution of linux
+docker pull alpine
+docker image ls ( the size of alpine image is very less compared to other distributions
+
+➜  ~ docker pull alpine
+Using default tag: latest
+latest: Pulling from library/alpine
+627beaf3eaaf: Pull complete
+Digest: sha256:58e1a1bb75db1b5a24a462dd5e2915277ea06438c3f105138f97eb53149673c4
+Status: Downloaded newer image for alpine:latest
+➜  ~ docker image ls
+REPOSITORY          TAG                 IMAGE ID            CREATED             SIZE
+ubuntu              latest              6a2f32de169d        34 hours ago        117 MB
+mysql               latest              d5127813070b        2 days ago          407 MB
+mongo               latest              48e26382080a        6 days ago          360 MB
+nginx               1.11                5766334bdaa0        7 days ago          183 MB
+nginx               latest              5766334bdaa0        7 days ago          183 MB
+httpd               latest              278cd55ca6c5        3 weeks ago         177 MB
+alpine              latest              4a415e366388        5 weeks ago         3.99 MB
+hello-world         latest              48b5124b2768        3 months ago        1.84 kB
+
+
+alpine has package manager of its own (apk)
+
+➜  ~ docker container run -it alpine bash
+docker: Error response from daemon: oci runtime error: container_linux.go:247: starting container process caused "exec: \"bash\": executable file not found in $PATH".
+
+This tells bash is not in the container of alpine
+it has sh but not bash
+
+
+1.) docker container run -it (start new container interactively)
+2.) docker container exec -it  (run additional command in running container)
+
+Docker Networks
+1.) docker container run -p (exposes the port on your machine)
+2.) container port command ( which tells which port are open for that container on your network)
+
+➜  ~ docker container ls
+CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS                         NAMES
+94b69c63be14        mysql               "docker-entrypoint..."   2 hours ago         Up 19 minutes       0.0.0.0:3306->3306/tcp        mysql_1
+1d65470f68d4        nginx               "nginx -g 'daemon ..."   3 hours ago         Up About an hour    0.0.0.0:80->80/tcp, 443/tcp   proxy
+➜  ~ docker container port mysql_1
+3306/tcp -> 0.0.0.0:3306
+➜  ~ docker container port proxy
+80/tcp -> 0.0.0.0:80
+
+How containers talk among each other?
+
+Each container connected to private virtual network "bridge"
+Each virtual routes through NAT firewall on host IP (host IP is the default network for container to access internet)
+
+NAT Firewall which is actually a docker daemon configuring the host IP address on its default interface so that your container can get out to the internet or the rest of your network and get back. All containers on a virtual network can talk to each other without -p
+
+Best practice is to create a new virtual network for each app.
+* network my_web_app for mysql and php/apache containers [ These can talk to each other without opening the ports up to the rest of your physical networks ]
+* network my_api for mongo and nodejs containers.
+
+Batteries included but removable
+(Defaults work well in many cases, but easy to swap out parts to customize it)
+
+1.) Make new virtual networks (like one for each app) or different ones based on different security requirements.
+2.) like two physical NICs on a real computer, you can Attach containers to more than one virtual network (or none)
+3.) Or you can skip any of the virtual network configuration and use host IP (--net=host) - > you might lose some of the containerization benefits but in some cases, it might be required
+4.) Use different docker network drivers to gain new abilities.
+
+(multi-host, private networking, sub interfaces etc.etc.)
+
+-p 80:80 (forwards traffic from port 80 of host to port 80 of the container)
+
+
+Docker container port
+
+➜  ~ docker container run -p 80:80 -d --name webhost nginx
+915ec7e1d5ef8006be49503af7ae1829fcdab0821bcad11f28df312847c1f22f
+➜  ~ docker container port webhost
+80/tcp -> 0.0.0.0:80
+
+Now what is the Docker IP for that container?
+--format : option to format 	the output of commands 	using "Go Templates"
+
+
+➜  ~ docker container inspect --format '{{.NetworkSettings.IPAddress}}' webhost
+172.17.0.2
+➜  ~ ifconfig en0
+en0: flags=8863<UP,BROADCAST,SMART,RUNNING,SIMPLEX,MULTICAST> mtu 1500
+	ether f4:5c:89:be:03:0d
+	inet6 fe80::f65c:89ff:febe:30d%en0 prefixlen 64 scopeid 0x4
+	inet 192.168.0.101 netmask 0xffffff00 broadcast 192.168.0.255
+	nd6 options=1<PERFORMNUD>
+	media: autoselect
+	status: active
+
+
+If two containers on different virtual network (bridge/docker 0) want to talk to each other, they would have to go through their published ports.
+On the host, you can not have multiple containers listening to the same port at host level.
+
+
+➜  ~ docker container inspect --format {{.NetworkSettings.IPAddress}} webhost
+172.17.0.2
+
+To list all networks
+
+➜  ~ docker network ls
+NETWORK ID          NAME                DRIVER              SCOPE
+0ae38f5bc901        bridge              bridge              local
+c6d8e6009f88        host                host                local
+f0497f8a9f7b        none                null                local
+
+➜  ~ docker network ls
+NETWORK ID          NAME                DRIVER              SCOPE
+0ae38f5bc901        bridge              bridge              local
+c6d8e6009f88        host                host                local
+f0497f8a9f7b        none                null                local
+➜  ~ docker network inspect 0ae
+[
+    {
+        "Name": "bridge",
+        "Id": "0ae38f5bc9011e94812b6af8df585ef2f6b25eda5378ecf15e957e5cd841bc39",
+        "Created": "2017-04-14T03:55:35.472651149Z",
+        "Scope": "local",
+        "Driver": "bridge",
+        "EnableIPv6": false,
+        "IPAM": {
+            "Driver": "default",
+            "Options": null,
+            "Config": [
+                {
+                    "Subnet": "172.17.0.0/16",
+                    "Gateway": "172.17.0.1"
+                }
+            ]
+        },
+        "Internal": false,
+        "Attachable": false,
+        "Containers": {
+            "915ec7e1d5ef8006be49503af7ae1829fcdab0821bcad11f28df312847c1f22f": {
+                "Name": "webhost",
+                "EndpointID": "8ec0c3590d75df69ded84abd515f6d303f83a938c65e0e78c41f99e811edd2a7",
+                "MacAddress": "02:42:ac:11:00:02",
+                "IPv4Address": "172.17.0.2/16",
+                "IPv6Address": ""
+            }
+        },
+        "Options": {
+            "com.docker.network.bridge.default_bridge": "true",
+            "com.docker.network.bridge.enable_icc": "true",
+            "com.docker.network.bridge.enable_ip_masquerade": "true",
+            "com.docker.network.bridge.host_binding_ipv4": "0.0.0.0",
+            "com.docker.network.bridge.name": "docker0",
+            "com.docker.network.driver.mtu": "1500"
+        },
+        "Labels": {}
+    }
+]
+
+Create a new network
+➜  ~ docker network create net1
+46a9210641f27d4e2ae89476d9191ed0c90f3bf4321bb63619b265790b7f0f72
+
+(optional --driver)
+
+connect/disconnect commands to attach/detach a network from a live running container. (like sticking a network card to a computer while it is running)
+
+
+➜  ~ docker network ls
+NETWORK ID          NAME                DRIVER              SCOPE
+0ae38f5bc901        bridge              bridge              local
+c6d8e6009f88        host                host                local
+f0497f8a9f7b        none                null                local
+
+bridge/ Docker 0 is the default virtual network which is NAT'ed behind host IP.
+
+➜  ~ docker network inspect bridge
+
+"Containers": {
+            "915ec7e1d5ef8006be49503af7ae1829fcdab0821bcad11f28df312847c1f22f": {
+                "Name": "webhost",
+                "EndpointID": "8ec0c3590d75df69ded84abd515f6d303f83a938c65e0e78c41f99e811edd2a7",
+                "MacAddress": "02:42:ac:11:00:02",
+                "IPv4Address": "172.17.0.2/16",
+                "IPv6Address": ""
+            }
+        },
+
+It lists the containers connected to that network.
+
+creates a default network of its own
+"IPAM": {
+            "Driver": "default",
+            "Options": null,
+            "Config": [
+                {
+                    "Subnet": "172.17.0.0/16", ( default, can be changed)
+                    "Gateway": "172.17.0.1" -> defaults out to route to physical network
+                }
+            ]
+        },
+
+Docker network 'host' is a special network that gains performance by skipping virtual networks but sacrifices security of container model. (attaches the container directly to the host interface)
+
+The docker network 'none' is equivalent to having an interface on your computer that is not attached to anything (removes eth0 and only leaves you with localhost localhost in container)
+
+➜  ~ docker network create my_app_net
+4a81fb411e4e04982595ec79f5b0c0b957ccb1a92fb7ad23b0b022a7bb069240
+➜  ~ docker network ls
+NETWORK ID          NAME                DRIVER              SCOPE
+0ae38f5bc901        bridge              bridge              local
+c6d8e6009f88        host                host                local
+4a81fb411e4e        my_app_net          bridge              local
+f0497f8a9f7b        none                null                local
+
+(default driver is bridge, can be changed)
+
+➜  ~ docker network inspect my_app_net
+[
+    {
+        "Name": "my_app_net",
+        "Id": "4a81fb411e4e04982595ec79f5b0c0b957ccb1a92fb7ad23b0b022a7bb069240",
+        "Created": "2017-04-14T06:36:45.731312089Z",
+        "Scope": "local",
+        "Driver": "bridge",
+        "EnableIPv6": false,
+        "IPAM": {
+            "Driver": "default",
+            "Options": {},
+            "Config": [
+                {
+                    "Subnet": "172.18.0.0/16",
+                    "Gateway": "172.18.0.1"
+                }
+            ]
+        },
+        "Internal": false,
+        "Attachable": false,
+        "Containers": {},
+        "Options": {},
+        "Labels": {}
+    }
+]
+
+(bridge network driver is a simple driver that simply creates a virtual network locally with its own subnet like 172.17 and above. It does not have features like overlay networks that allow private networking between hosts and other third party drivers like weave
+network driver is a built in or third party extensions that give you virtual network features.
+
+docker network create --help
+(gives you the various options you can specify while creating a network)
+
+➜  ~ docker network disconnect 841a6b10a4be elated_agnesi [ Dynamically remove a NIC from a container on a specific virtual network ]
+~ docker network connect 841a6b10a4be elated_agnesi [ Dynamically attach an NIC to a container on a specific virtual network ]
+docker container inspect elated_agnesi
+
+Networks": {
+                "bridge": {
+                    "IPAMConfig": null,
+                    "Links": null,
+                    "Aliases": null,
+                    "NetworkID": "0ae38f5bc9011e94812b6af8df585ef2f6b25eda5378ecf15e957e5cd841bc39",
+                    "EndpointID": "6dab07adf569919423a7f726063bc094cab6d3ffadaf9a8098084763a5e04ff5",
+                    "Gateway": "172.17.0.1",
+                    "IPAddress": "172.17.0.2",
+                    "IPPrefixLen": 16,
+                    "IPv6Gateway": "",
+                    "GlobalIPv6Address": "",
+                    "GlobalIPv6PrefixLen": 0,
+                    "MacAddress": "02:42:ac:11:00:02"
+                },
+                "my_app_network": {
+                    "IPAMConfig": {},
+                    "Links": null,
+                    "Aliases": [
+                        "4ab19db54b64"
+                    ],
+                    "NetworkID": "841a6b10a4be983df53fbf87200575e6d2cc3c043bb213b79079d3d7655bcc2a",
+                    "EndpointID": "c2039e0bda35927d5cb5e9664ac5f076a1b1ff0a3b876e9fe2cd62227b0608c1",
+                    "Gateway": "172.18.0.1",
+                    "IPAddress": "172.18.0.3",
+                    "IPPrefixLen": 16,
+                    "IPv6Gateway": "",
+                    "GlobalIPv6Address": "",
+                    "GlobalIPv6PrefixLen": 0,
+                    "MacAddress": "02:42:ac:12:00:03"
+                }
+            }
+        }
+    }
+
+Docker Networks: Default security
+Create your apps so frontend/backend sit on same Docker Network
+Their inter communication never leaves host
+all externally exposed ports closed by default.
+you must manually expose via -p which is better default security
+
+This gets better with Docker Swarm and Overlay networks.
+
+DNS Networks: DNS
+Questions: how DNS is the key to ease inter-container comms
+comparison of working with default and custom networks in regard to DNS
+--link to enable DNS on default bridge network. (for docker container run)
+
+Static IPs 	and using IPs for talking to containers is anti-patern. Try to avoid it.  because we can;t assume from minute to minute that IP addresses are going to be the same.
+The container might go away or it might fail or docker might bring it up somewhere else.( too dynamic and too complicated to deal with that)
+Naming
+
+Docker daemon has built in DNS server that containers use by default.
+Dockers use container names as equivalent of host names for containers talking to each other.
+
+Automatic DNS resolution for containers in the same network using their container names.
+If we create another container in the same network, these containers should be able to find out each other using container names, regardless of what their IP address is,
+Docker defaults the container name to host name but you can also create aliases.
+
+➜  ~ docker container run -d --name my_nginx --network my_app_network nginx
+a716d760721b021c8f0fe85b39347b5536191a277be26b7e801ad28d1be1e52d
+
+➜  ~ docker container exec -it my_nginx ping new_nginx [ DNS resolution just works]  [ both my_nginx and new_nginx in same my_app_network ]
+PING new_nginx (172.18.0.2): 56 data bytes
+64 bytes from 172.18.0.2: icmp_seq=0 ttl=64 time=0.207 ms
+64 bytes from 172.18.0.2: icmp_seq=1 ttl=64 time=0.119 ms
+64 bytes from 172.18.0.2: icmp_seq=2 ttl=64 time=0.136 ms
+64 bytes from 172.18.0.2: icmp_seq=3 ttl=64 time=0.155 ms
+64 bytes from 172.18.0.2: icmp_seq=4 ttl=64 time=0.111 ms
+^C--- new_nginx ping statistics ---
+5 packets transmitted, 5 packets received, 0% packet loss
+round-trip min/avg/max/stddev = 0.111/0.146/0.207/0.034 ms
+
+(can be used to say PHP server talking to mysql backend )
+
+➜  ~ docker container exec -it my_nginx ping new_nginx
+PING new_nginx (172.18.0.2): 56 data bytes
+64 bytes from 172.18.0.2: icmp_seq=0 ttl=64 time=0.207 ms
+64 bytes from 172.18.0.2: icmp_seq=1 ttl=64 time=0.119 ms
+64 bytes from 172.18.0.2: icmp_seq=2 ttl=64 time=0.136 ms
+64 bytes from 172.18.0.2: icmp_seq=3 ttl=64 time=0.155 ms
+64 bytes from 172.18.0.2: icmp_seq=4 ttl=64 time=0.111 ms
+^C--- new_nginx ping statistics ---
+5 packets transmitted, 5 packets received, 0% packet loss
+round-trip min/avg/max/stddev = 0.111/0.146/0.207/0.034 ms
+➜  ~ docker container exec -it new_nginx ping my_nginx
+PING my_nginx (172.18.0.4): 56 data bytes
+64 bytes from 172.18.0.4: icmp_seq=0 ttl=64 time=0.075 ms
+64 bytes from 172.18.0.4: icmp_seq=1 ttl=64 time=0.114 ms
+^C--- my_nginx ping statistics ---
+2 packets transmitted, 2 packets received, 0% packet loss
+round-trip min/avg/max/stddev = 0.075/0.095/0.114/0.000 ms
+
+Resolution works both ways.
+
+If you stop and start the containers, but in a different order, they might not have the same IP address but their host names/container names are always same so reliable.
+
+Default Docker network bridge does not have built in DNS server. --link (add link to another container)
+docker container create --help
+     --link list                             Add link to another container (default []) [ Specify manual links between containers in the default bridge network ]
+
+docker compose [ compose automatically will create new virtual network when you spin an app with it ]
+DNS for friendly names is built in if you use custom networks.
+Containers should not rely on IPs for inter-communication
+
+cmd + Shift + D : Another Shell horizontal split
+cmd + d: Vertical split
+cmd + w : close the shell
+
+
+DNS Records
+
+
+DNS Round Robin (not a true load balancer)
+(multiple IP servers behind the name you are using on the internet)
+Docker version 1.11 version , multiple containters can respond to the same DNS name (alias feature)
+
+
+docker container --rm (this will destroy the container once used in interactive mode)
+-p ( to publish the opened ports to the outside world, host)
+DockerFile has the list of the ports or the required config that needs to be done
